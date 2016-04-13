@@ -29,11 +29,16 @@ import pl.com.bottega.ecommerce.sharedkernel.Money;
 public class BookKeeperTest {
     InvoiceFactory invoiceFactory;
     TaxPolicy tax;
+    ClientData client;
+    Invoice invoice;
+    InvoiceRequest invoiceReq;
     @Before
     public void setForTest(){
         invoiceFactory = mock(InvoiceFactory.class);
         tax = mock(TaxPolicy.class);
-        
+        client = new ClientData(Id.generate(), "name");
+        invoice = new Invoice(Id.generate(), client);
+        invoiceReq = new InvoiceRequest(client);
         
         
        
@@ -42,9 +47,7 @@ public class BookKeeperTest {
     
     @Test
     public void givenInvoiceRequestWithSingleItem_whenIssuance_thenInvoiceWithSingleItem(){
-        ClientData client = new ClientData(Id.generate(), "name");
-        Invoice invoice = new Invoice(Id.generate(), client);
-        InvoiceRequest invoiceReq = new InvoiceRequest(client);
+
         ProductData product = mock(ProductData.class);
         RequestItem requestItem = new RequestItem(product, 1, new Money(32));
         invoiceReq.add(requestItem);
@@ -55,6 +58,11 @@ public class BookKeeperTest {
         Invoice result = bookKeeper.issuance(invoiceReq, tax);
         
         assertThat(result.getItems().size(), equalTo(1));
+    }
+    
+    @Test
+    public void givenInvoiceRequestWithTwoItems_WhenIssuance_ThenCalculateTaxCalledTwoTimes(){
+        
     }
     
 }
