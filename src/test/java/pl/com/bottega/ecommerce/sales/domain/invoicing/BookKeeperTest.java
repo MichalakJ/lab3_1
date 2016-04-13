@@ -7,6 +7,9 @@ package pl.com.bottega.ecommerce.sales.domain.invoicing;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.assertThat;
 import org.junit.Before;
 import org.junit.Test;
 import static org.mockito.Matchers.any;
@@ -42,11 +45,16 @@ public class BookKeeperTest {
         ClientData client = new ClientData(Id.generate(), "name");
         Invoice invoice = new Invoice(Id.generate(), client);
         InvoiceRequest invoiceReq = new InvoiceRequest(client);
-        ProductData product = new ProductData();
-        RequestItem requestItem = new requestItem();
+        ProductData product = mock(ProductData.class);
+        RequestItem requestItem = new RequestItem(product, 1, new Money(32));
+        invoiceReq.add(requestItem);
         when(invoiceFactory.create(client)).thenReturn(invoice);
         when(tax.calculateTax(any(ProductType.class), any(Money.class))).thenReturn(new Tax(Money.ZERO, null));
         
+        BookKeeper bookKeeper = new BookKeeper(invoiceFactory);
+        Invoice result = bookKeeper.issuance(invoiceReq, tax);
+        
+        assertThat(result.getItems().size(), equalTo(1));
     }
     
 }
