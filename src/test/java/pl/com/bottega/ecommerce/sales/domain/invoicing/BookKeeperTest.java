@@ -16,6 +16,8 @@ import static org.mockito.Matchers.any;
 import org.mockito.Mockito;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import pl.com.bottega.ecommerce.canonicalmodel.publishedlanguage.ClientData;
 import pl.com.bottega.ecommerce.canonicalmodel.publishedlanguage.Id;
 import pl.com.bottega.ecommerce.sales.domain.productscatalog.ProductData;
@@ -62,6 +64,18 @@ public class BookKeeperTest {
     
     @Test
     public void givenInvoiceRequestWithTwoItems_WhenIssuance_ThenCalculateTaxCalledTwoTimes(){
+        ProductData product = mock(ProductData.class);
+        RequestItem requestItem = new RequestItem(product, 1, new Money(32));
+        invoiceReq.add(requestItem);
+        invoiceReq.add(requestItem);
+        when(product.getType()).thenReturn(ProductType.DRUG);
+        when(invoiceFactory.create(client)).thenReturn(invoice);
+        when(tax.calculateTax(any(ProductType.class), any(Money.class))).thenReturn(new Tax(Money.ZERO, null));
+        
+        BookKeeper bookKeeper = new BookKeeper(invoiceFactory);
+        Invoice result = bookKeeper.issuance(invoiceReq, tax);
+        
+        verify(tax, times(2)).calculateTax(ProductType.DRUG, new Money(32));
         
     }
     
