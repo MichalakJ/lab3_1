@@ -34,6 +34,8 @@ public class BookKeeperTest {
     ClientData client;
     Invoice invoice;
     InvoiceRequest invoiceReq;
+    RequestItem requestItem;
+    ProductData product;
     @Before
     public void setForTest(){
         invoiceFactory = mock(InvoiceFactory.class);
@@ -41,7 +43,8 @@ public class BookKeeperTest {
         client = new ClientData(Id.generate(), "name");
         invoice = new Invoice(Id.generate(), client);
         invoiceReq = new InvoiceRequest(client);
-        
+        product = mock(ProductData.class);
+        requestItem = new RequestItem(product, 1, new Money(32));
         
        
         
@@ -50,8 +53,7 @@ public class BookKeeperTest {
     @Test
     public void givenInvoiceRequestWithSingleItem_whenIssuance_thenInvoiceWithSingleItem(){
 
-        ProductData product = mock(ProductData.class);
-        RequestItem requestItem = new RequestItem(product, 1, new Money(32));
+        
         invoiceReq.add(requestItem);
         when(invoiceFactory.create(client)).thenReturn(invoice);
         when(tax.calculateTax(any(ProductType.class), any(Money.class))).thenReturn(new Tax(Money.ZERO, null));
@@ -64,8 +66,7 @@ public class BookKeeperTest {
     
     @Test
     public void givenInvoiceRequestWithTwoItems_WhenIssuance_ThenCalculateTaxCalledTwoTimes(){
-        ProductData product = mock(ProductData.class);
-        RequestItem requestItem = new RequestItem(product, 1, new Money(32));
+        
         invoiceReq.add(requestItem);
         invoiceReq.add(requestItem);
         when(product.getType()).thenReturn(ProductType.DRUG);
@@ -81,8 +82,7 @@ public class BookKeeperTest {
     
     @Test
     public void givenInvoiceRequestWithMultipleItems_whenIssuance_thenInvoiceFactoryCalledOneTime(){
-        ProductData product = mock(ProductData.class);
-        RequestItem requestItem = new RequestItem(product, 1, new Money(32));
+        
         invoiceReq.add(requestItem);
         invoiceReq.add(requestItem);
         BookKeeper bookKeeper = new BookKeeper(invoiceFactory);
