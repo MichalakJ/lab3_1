@@ -6,16 +6,29 @@
 package pl.com.bottega.ecommerce.sales.application.api.handler;
 
 import java.util.Date;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.assertThat;
 import org.junit.Before;
 import org.junit.Test;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import pl.com.bottega.ecommerce.canonicalmodel.publishedlanguage.ClientData;
 import pl.com.bottega.ecommerce.canonicalmodel.publishedlanguage.Id;
 import pl.com.bottega.ecommerce.sales.application.api.command.AddProductCommand;
+import pl.com.bottega.ecommerce.sales.domain.client.Client;
+import pl.com.bottega.ecommerce.sales.domain.client.ClientRepository;
+import pl.com.bottega.ecommerce.sales.domain.equivalent.SuggestionService;
+import pl.com.bottega.ecommerce.sales.domain.productscatalog.Product;
+import pl.com.bottega.ecommerce.sales.domain.productscatalog.ProductRepository;
+import pl.com.bottega.ecommerce.sales.domain.productscatalog.ProductType;
 import pl.com.bottega.ecommerce.sales.domain.reservation.Reservation;
 import pl.com.bottega.ecommerce.sales.domain.reservation.ReservationRepository;
+import pl.com.bottega.ecommerce.sharedkernel.Money;
+import pl.com.bottega.ecommerce.system.application.SystemContext;
 
 /**
  *
@@ -23,28 +36,73 @@ import pl.com.bottega.ecommerce.sales.domain.reservation.ReservationRepository;
  */
 public class AddProductCommanderHandlerTest {
     
-    private AddProductCommand command;
+
     private AddProductCommandHandler handler;
     private ReservationRepository reservationRepository;
+    private ProductRepository productRepository;
+    private SuggestionService suggestionService;
+    private ClientRepository clientRepository;
+    private Product product;
+    private Product subsituteProduct;
+    private Client client;
+    private Id productId;
+    private Id orderId;
+    private Reservation reservation;
     @Before
     public void setUpForTest(){
-        command = new AddProductCommand(Id.generate(), Id.generate(), 2);
+        
         handler = new AddProductCommandHandler();
-        Reservation reservation = new Reservation(Id.generate(), Reservation.ReservationStatus.CLOSED,
-                new ClientData(Id.generate(), "client"), new Date());
+
         
         reservationRepository = mock(ReservationRepository.class);
-        when(reservationRepository.load(any(Id.class))).thenReturn(reservation);
+        productId = new Id("1");
+        orderId = new Id("1");
+        
+        reservation = new Reservation(Id.generate(), Reservation.ReservationStatus.OPENED,
+                new ClientData(Id.generate(), "client"), new Date());
+        when(reservationRepository.load(orderId)).thenReturn(reservation);
+        
+       
+        
+        product = new Product(Id.generate(), new Money(21),"product", ProductType.DRUG);
+        subsituteProduct = new Product(Id.generate(), new Money(21),"subProduct", ProductType.DRUG);
+        productRepository = mock(ProductRepository.class);
+        when(productRepository.load(any(Id.class))).thenReturn(product);
+        client = mock(Client.class);
+        suggestionService = mock(SuggestionService.class);
+        when(suggestionService.suggestEquivalent(eq(product), any(Client.class))).thenReturn(subsituteProduct);
+        
+        clientRepository = mock(ClientRepository.class);
+        when(clientRepository.load(any(Id.class))).thenReturn(client);
         
         handler.setReservationRepository(reservationRepository);
-        
-        
+        handler.setProductRepository(productRepository);
+        handler.setSuggestionService(suggestionService);
+        handler.setClientRepository(clientRepository);
+        handler.setSystemContext(new SystemContext());
     }
     
     
     @Test
-    public void someTest(){
+    public void givenCommandWithAvaiableProduct_whenHandle_thenItemInReservation(){
         
+        AddProductCommand command = new AddProductCommand(orderId, productId, 2);
+        handler.handle(command);
+        assertThat(reservation.getReservedProducts().size(), equalTo(1));
+    }
+    
+    @Test
+    public void givenCommandWithNotAvaiableProduct_whenHandle_substitueProductInReservation(){
+        product.markAsRemoved();
+        AddProductCommand command = new AddProductCommand(orderId, productId, 2);
+        handler.handle(command);
+        assertThat(reservation.getReservedProducts().get(0).getName(), equalTo(subsituteProduct.getName()));
+    }
+    @Test
+    public void givenCommandWithAvaiableProduct_whenHandle_suggestionServiceNotCalled(){
+        AddProductCommand command = new AddProductCommand(orderId, productId, 2);
+        handler.handle(command);
+        verify(suggestionService, times(0)).suggestEquivalent(any(Product.class), any(Client.class));
     }
     
 }
