@@ -79,4 +79,20 @@ public class BookKeeperTest {
         
     }
     
+    @Test
+    public void givenInvoiceRequestWithMultipleItems_whenIssuance_thenInvoiceFactoryCalledOneTime(){
+        ProductData product = mock(ProductData.class);
+        RequestItem requestItem = new RequestItem(product, 1, new Money(32));
+        invoiceReq.add(requestItem);
+        invoiceReq.add(requestItem);
+        BookKeeper bookKeeper = new BookKeeper(invoiceFactory);
+        when(invoiceFactory.create(client)).thenReturn(invoice);
+        when(product.getType()).thenReturn(ProductType.DRUG);
+        when(tax.calculateTax(any(ProductType.class), any(Money.class))).thenReturn(new Tax(Money.ZERO, null));
+        Invoice result = bookKeeper.issuance(invoiceReq, tax);
+        
+        verify(invoiceFactory, times(1)).create(client);
+    }
+    
+    
 }
