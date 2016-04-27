@@ -22,19 +22,23 @@ public class ProductBuilder {
         public ProductBuilder(){
             
         }
-        public void getProduct(){
+        public ProductBuilder getProduct(){
             product = new Product(Id.generate(), price, name, productType);
+            return this;
         }
         public Product build(){
             return product;
         }
-        public void withName(String name){
+        public ProductBuilder withName(String name){
             this.name = name;
+            return this;
         }
-        public void withPrice(Money price){
+        public ProductBuilder withPrice(Money price){
             this.price = price;
+            return this;
         }
-        public void withProductType(ProductType productType){
+        public ProductBuilder withProductType(ProductType productType){
             this.productType = productType;
+            return this;
         }
 }

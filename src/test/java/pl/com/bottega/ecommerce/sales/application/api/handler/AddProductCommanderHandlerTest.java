@@ -5,6 +5,7 @@
  */
 package pl.com.bottega.ecommerce.sales.application.api.handler;
 
+import Builder.ProductBuilder;
 import java.util.Date;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
@@ -63,9 +64,9 @@ public class AddProductCommanderHandlerTest {
         when(reservationRepository.load(orderId)).thenReturn(reservation);
         
        
-        
-        product = new Product(Id.generate(), new Money(21),"product", ProductType.DRUG);
-        subsituteProduct = new Product(Id.generate(), new Money(21),"subProduct", ProductType.DRUG);
+        ProductBuilder builder= new ProductBuilder();
+        product = builder.getProduct().build();
+        subsituteProduct = builder.getProduct().withName("sub Product").build();
         productRepository = mock(ProductRepository.class);
         when(productRepository.load(any(Id.class))).thenReturn(product);
         client = mock(Client.class);
