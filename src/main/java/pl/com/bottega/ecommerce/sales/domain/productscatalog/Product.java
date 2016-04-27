@@ -45,4 +45,25 @@ public class Product extends BaseAggregateRoot{
 	public ProductData generateSnapshot(){
 		return new ProductData(getId(), price, name, productType, new Date());
 	}
+
+    /**
+     * @param price the price to set
+     */
+    public void setPrice(Money price) {
+        this.price = price;
+    }
+
+    /**
+     * @param name the name to set
+     */
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    /**
+     * @param productType the productType to set
+     */
+    public void setProductType(ProductType productType) {
+        this.productType = productType;
+    }
 }
